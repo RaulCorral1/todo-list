@@ -2,6 +2,8 @@ const formulario = document.querySelector("#formulario-tarea");
 const inputTitulo = document.querySelector("#titulo");
 const listaTareas = document.querySelector("#lista-tareas");
 const mensajeError = document.querySelector("#mensaje-error");
+const selectCategoria = document.querySelector("#categoria");
+
 
 async function cargarTareas() {
     const respuesta = await fetch("/api/tareas");
@@ -71,5 +73,16 @@ formulario.addEventListener("submit", async (e) => {
     inputTitulo.value = "";
     cargarTareas();
 });
+async function cargarCategorias() {
+    const respuesta = await fetch("/api/categorias");
+    const categorias = await respuesta.json();
+
+    categorias.forEach(cat => {
+        const opcion = document.createElement("option");
+        opcion.value = cat.id;
+        opcion.textContent = cat.nombre;
+        selectCategoria.appendChild(opcion);
+    });
+}
 
 cargarTareas();
