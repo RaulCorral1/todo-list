@@ -71,17 +71,24 @@ app.put("/api/tareas/:id", async (req, res) => {
     }
 });
 
-app.delete("/api/tareas/:id", (req, res) => {
-    const id = Number(req.params.id);
-    const existe = tareas.find(t => t.id === id);
+app.delete("/api/tareas/:id", async (req, res) => {
+    try {
+        const idTarea = Number(req.params.id);
 
-    if (!existe) {
-        return res.status(404).json({ error: "No encontrada" });
+        const filasEliminadas = await db("tareas")
+            .where({ id: idTarea })
+            .del();
+
+        if (filasEliminadas === 0) {
+            return res.status(404).json({ error: "Tarea no encontrada" });
+        }
+
+        res.status(204).end();
+    } catch (error) {
+        res.status(500).json({ error: "Error al eliminar la tarea" });
     }
-
-    tareas = tareas.filter(t => t.id !== id);
-    res.status(204).end();
 });
+
 
 app.listen(3000, () => {
     console.log("Servidor en http://localhost:3000");
