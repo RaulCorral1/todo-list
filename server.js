@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const db = require("./database");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -15,9 +17,15 @@ let tareas = [
 ];
 let siguienteId = 2;
 
-app.get("/api/tareas", (req, res) => {
-    res.json(tareas);
+app.get("/api/tareas", async (req, res) => {
+    try {
+        const tareas = await db("tareas").select("*");
+        res.json(tareas);
+    } catch (error) {
+        res.status(500).json({ error: "No se pudieron consultar las tareas" });
+    }
 });
+
 
 app.post("/api/tareas", (req, res) => {
     const titulo = req.body.titulo;
