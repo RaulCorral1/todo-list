@@ -32,6 +32,17 @@ app.post("/api/tareas", (req, res) => {
     tareas.push(tarea);
     res.status(201).json(tarea);
 });
+app.delete("/api/tareas/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const existe = tareas.find(t => t.id === id);
+
+    if (!existe) {
+        return res.status(404).json({ error: "No encontrada" });
+    }
+
+    tareas = tareas.filter(t => t.id !== id);
+    res.status(204).end();
+});
 
 app.listen(3000, () => {
     console.log("Servidor en http://localhost:3000");
