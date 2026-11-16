@@ -3,10 +3,27 @@ const inputTitulo = document.querySelector("#titulo");
 const listaTareas = document.querySelector("#lista-tareas");
 const mensajeError = document.querySelector("#mensaje-error");
 const selectCategoria = document.querySelector("#categoria");
+const filtroCategoria = document.querySelector("#filtro-categoria");
 
+async function cargarCategorias() {
+    const respuesta = await fetch("/api/categorias");
+    const categorias = await respuesta.json();
+
+    categorias.forEach(cat => {
+        const opcion = document.createElement("option");
+        opcion.value = cat.id;
+        opcion.textContent = cat.nombre;
+        selectCategoria.appendChild(opcion);
+
+        const opcionFiltro = opcion.cloneNode(true);
+        filtroCategoria.appendChild(opcionFiltro);
+    });
+}
 
 async function cargarTareas() {
-    const respuesta = await fetch("/api/tareas");
+    const catId = filtroCategoria.value;
+    const url = catId ? `/api/tareas?categoria_id=${catId}` : "/api/tareas";
+    const respuesta = await fetch(url);
     const tareas = await respuesta.json();
     pintarTareas(tareas);
 }
@@ -30,7 +47,8 @@ function pintarTareas(tareas) {
         });
 
         const texto = document.createElement("span");
-        texto.textContent = ` ${tarea.titulo} `;
+        const etiquetaCat = tarea.categoria ? ` [${tarea.categoria}]` : "";
+        texto.textContent = ` ${tarea.titulo}${etiquetaCat} `;
         if (tarea.completada) {
             texto.style.textDecoration = "line-through";
         }
@@ -58,10 +76,12 @@ formulario.addEventListener("submit", async (e) => {
     const titulo = inputTitulo.value.trim();
     if (!titulo) return;
 
+    const categoria_id = selectCategoria.value || null;
+
     const respuesta = await fetch("/api/tareas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ titulo })
+        body: JSON.stringify({ titulo, categoria_id })
     });
 
     if (!respuesta.ok) {
@@ -71,18 +91,13 @@ formulario.addEventListener("submit", async (e) => {
     }
 
     inputTitulo.value = "";
+    selectCategoria.value = "";
     cargarTareas();
 });
-async function cargarCategorias() {
-    const respuesta = await fetch("/api/categorias");
-    const categorias = await respuesta.json();
 
-    categorias.forEach(cat => {
-        const opcion = document.createElement("option");
-        opcion.value = cat.id;
-        opcion.textContent = cat.nombre;
-        selectCategoria.appendChild(opcion);
-    });
-}
+filtroCategoria.addEventListener("change", () => {
+    cargarTareas();
+});
 
+cargarCategorias();
 cargarTareas();
