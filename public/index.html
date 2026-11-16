@@ -8,12 +8,17 @@
 <h1>Mis tareas</h1>
 
 <section>
-    <h2>Pruebas de conexión</h2>
-    <button id="saludar">Consultar saludo</button>
-    <p id="resultado"></p>
-    <button id="btn-curso">Consultar curso</button>
-    <p id="info-curso"></p>
+    <h2>Nueva tarea</h2>
+    <form id="formulario-tarea">
+        <input type="text" id="titulo" placeholder="Ej: Terminar práctica de DAW" required>
+        <button type="submit">Añadir</button>
+    </form>
+    <p id="mensaje-error" style="color: red;"></p>
+</section>
 
+<section>
+    <h2>Lista de tareas</h2>
+    <ul id="lista-tareas"></ul>
 </section>
 
 <script src="app.js"></script>
