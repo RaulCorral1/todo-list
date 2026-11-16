@@ -44,6 +44,32 @@ app.post("/api/tareas", async (req, res) => {
         res.status(500).json({ error: "Error al guardar la tarea" });
     }
 });
+app.put("/api/tareas/:id", async (req, res) => {
+    const idTarea = Number(req.params.id);
+    const estadoCompletada = req.body.completada;
+
+    if (typeof estadoCompletada !== "boolean") {
+        return res.status(400).json({ error: "El campo completada debe ser booleano" });
+    }
+
+    try {
+        const filasModificadas = await db("tareas")
+            .where({ id: idTarea })
+            .update({ completada: estadoCompletada });
+
+        if (filasModificadas === 0) {
+            return res.status(404).json({ error: "Tarea no encontrada" });
+        }
+
+        const tareaActualizada = await db("tareas")
+            .where({ id: idTarea })
+            .first();
+
+        res.json(tareaActualizada);
+    } catch (error) {
+        res.status(500).json({ error: "Error al actualizar la tarea" });
+    }
+});
 
 app.delete("/api/tareas/:id", (req, res) => {
     const id = Number(req.params.id);
