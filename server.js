@@ -12,10 +12,6 @@ app.get("/api/saludo", (req, res) => {
 app.get("/api/curso", (req, res) => {
     res.json({ curso: "1º DAW", alumnos: 18 });
 });
-let tareas = [
-    { id: 1, titulo: "Aprender Express", completada: false }
-];
-let siguienteId = 2;
 
 app.get("/api/tareas", async (req, res) => {
     try {
@@ -27,19 +23,28 @@ app.get("/api/tareas", async (req, res) => {
 });
 
 
-app.post("/api/tareas", (req, res) => {
+app.post("/api/tareas", async (req, res) => {
     const titulo = req.body.titulo;
     if (typeof titulo !== "string" || !titulo.trim()) {
         return res.status(400).json({ error: "El título es obligatorio" });
     }
-    const tarea = {
-        id: siguienteId++,
-        titulo: titulo.trim(),
-        completada: false
-    };
-    tareas.push(tarea);
-    res.status(201).json(tarea);
+
+    try {
+        const [id] = await db("tareas").insert({
+            titulo: titulo.trim(),
+            completada: false
+        });
+
+        res.status(201).json({
+            id: id,
+            titulo: titulo.trim(),
+            completada: false
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Error al guardar la tarea" });
+    }
 });
+
 app.delete("/api/tareas/:id", (req, res) => {
     const id = Number(req.params.id);
     const existe = tareas.find(t => t.id === id);
