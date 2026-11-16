@@ -12,10 +12,47 @@ app.get("/api/saludo", (req, res) => {
 app.get("/api/curso", (req, res) => {
     res.json({ curso: "1º DAW", alumnos: 18 });
 });
+app.get("/api/categorias", async (req, res) => {
+    try {
+        const categorias = await db("categorias").select("*");
+        res.json(categorias);
+    } catch (error) {
+        res.status(500).json({ error: "Error al cargar categorías" });
+    }
+});
+
+app.post("/api/categorias", async (req, res) => {
+    const nombre = req.body.nombre;
+    if (typeof nombre !== "string" || !nombre.trim()) {
+        return res.status(400).json({ error: "El nombre de la categoría es obligatorio" });
+    }
+
+    try {
+        const [id] = await db("categorias").insert({ nombre: nombre.trim() });
+        res.status(201).json({ id, nombre: nombre.trim() });
+    } catch (error) {
+        res.status(400).json({ error: "No se pudo crear la categoría (puede que ya exista)" });
+    }
+});
+
 
 app.get("/api/tareas", async (req, res) => {
     try {
-        const tareas = await db("tareas").select("*");
+        const consulta = db("tareas")
+            .leftJoin("categorias", "tareas.categoria_id", "categorias.id")
+            .select(
+                "tareas.id",
+                "tareas.titulo",
+                "tareas.completada",
+                "tareas.categoria_id",
+                "categorias.nombre as categoria"
+            );
+
+        if (req.query.categoria_id) {
+            consulta.where("tareas.categoria_id", Number(req.query.categoria_id));
+        }
+
+        const tareas = await consulta;
         res.json(tareas);
     } catch (error) {
         res.status(500).json({ error: "No se pudieron consultar las tareas" });
@@ -25,6 +62,8 @@ app.get("/api/tareas", async (req, res) => {
 
 app.post("/api/tareas", async (req, res) => {
     const titulo = req.body.titulo;
+    const categoriaId = req.body.categoria_id ? Number(req.body.categoria_id) : null;
+
     if (typeof titulo !== "string" || !titulo.trim()) {
         return res.status(400).json({ error: "El título es obligatorio" });
     }
@@ -32,18 +71,21 @@ app.post("/api/tareas", async (req, res) => {
     try {
         const [id] = await db("tareas").insert({
             titulo: titulo.trim(),
-            completada: false
+            completada: false,
+            categoria_id: categoriaId
         });
 
         res.status(201).json({
-            id: id,
+            id,
             titulo: titulo.trim(),
-            completada: false
+            completada: false,
+            categoria_id: categoriaId
         });
     } catch (error) {
         res.status(500).json({ error: "Error al guardar la tarea" });
     }
 });
+
 app.put("/api/tareas/:id", async (req, res) => {
     const idTarea = Number(req.params.id);
     const estadoCompletada = req.body.completada;
